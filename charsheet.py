@@ -64,6 +64,12 @@ def generate_pdf(character):
     for armor in character['Armors']:
         if armor:
             pdf.cell(0, 10, f"- {armor}", ln=True)
+    
+    # Class Powers
+    pdf.cell(0, 10, "Class Powers:", ln=True)
+    for power in character['Class Powers']:
+        if armor:
+            pdf.cell(0, 10, f"- {power}", ln=True)
 
     # Spells
     pdf.set_font("Arial", 'B', 12)
@@ -176,6 +182,13 @@ def main():
         armor = st.text_input(f"**Armor {i}**", key=f"armor_{i}")
         armors.append(armor)
 
+        # --------------------- Powers ---------------------
+    st.header("✨ Class Powers")
+    powers = []
+    for i in range(1, 7):
+        power = st.text_input(f"**Class Power {i}**", key=f"power_{i}")
+        powers.append(power)
+
     # --------------------- Spell Spaces ---------------------
     st.header("✨ Spells")
     spell_levels = list(range(0, 10))
@@ -249,6 +262,12 @@ def main():
             if armor:
                 st.write(f"- {armor}")
 
+        # Class Powers
+        st.markdown("### ✨ Class Powers")
+        for power in powers:
+            if power:
+                st.write(f"- {power}")
+
         # Spells
         st.markdown("### ✨ Spells")
         for level_num in spell_levels:
@@ -272,6 +291,7 @@ def main():
             "AC": ac,
             "Weapons": weapons,
             "Armors": armors,
+            "Class Powers": powers,
             "Spells": spells
         }
 
