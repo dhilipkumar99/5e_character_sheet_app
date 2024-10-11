@@ -64,11 +64,11 @@ def generate_pdf(character):
     for armor in character['Armors']:
         if armor:
             pdf.cell(0, 10, f"- {armor}", ln=True)
-    
+
     # Class Powers
     pdf.cell(0, 10, "Class Powers:", ln=True)
     for power in character['Class Powers']:
-        if armor:
+        if power:
             pdf.cell(0, 10, f"- {power}", ln=True)
 
     # Spells
@@ -93,15 +93,18 @@ def main():
     st.set_page_config(page_title="D&D 5e Character Sheet", layout="wide")
     st.title("🧙‍♂️ D&D 5e Character Sheet")
 
-    # --------------------- Character Information ---------------------
+    # Character Information
     st.header("📝 Character Information")
-    race = st.text_input("**Race**", value="Human")
-    lass = st.text_input("**Class**", value="Sorceror")
-    level = st.number_input("**Level**", min_value=1, max_value=20, value=1, step=1)
-    proficiency_bonus = calculate_proficiency_bonus(level)
-    st.markdown(f"**Proficiency Bonus:** `+{proficiency_bonus}`")
+    col1, col2 = st.columns(2)
+    with col1:
+        race = st.text_input("**Race**", value="Human", max_chars=20)
+        lass = st.text_input("**Class**", value="Sorceror", max_chars=20)
+    with col2:
+        level = st.number_input("**Level**", min_value=1, max_value=20, value=1, step=1)
+        proficiency_bonus = calculate_proficiency_bonus(level)
+        st.markdown(f"**Proficiency Bonus:** `+{proficiency_bonus}`")
 
-    # --------------------- Ability Scores & Skills ---------------------
+    # Ability Scores & Skills
     st.header("📊 Ability Scores & 🎯 Skills")
     abilities = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
 
@@ -119,7 +122,7 @@ def main():
     ability_mods = {}
     skills_final = {}
 
-    # Arrange abilities in three columns
+    # Arrange abilities in columns
     ability_cols = st.columns(3)
     for idx, ability in enumerate(abilities):
         with ability_cols[idx % 3]:
@@ -130,7 +133,8 @@ def main():
                 max_value=30,
                 value=10,
                 step=1,
-                key=f"{ability}_score"
+                key=f"{ability}_score",
+                label_visibility="collapsed"
             )
             modifier = calculate_modifier(score)
             st.markdown(f"*Modifier:* `{modifier:+}`")
@@ -140,56 +144,58 @@ def main():
             # List associated skills
             if ability in skills_dict:
                 for skill in skills_dict[ability]:
-                    st.markdown(f"**{skill}**")
-                    # Create two checkboxes for proficiency
-                    proficiency1 = st.checkbox(
-                        f"Proficiency in {skill} (Add +{proficiency_bonus})",
-                        key=f"{skill}_prof1"
-                    )
-                    proficiency2 = st.checkbox(
-                        f"Expertise in {skill} (Add +{proficiency_bonus} again)",
-                        key=f"{skill}_prof2"
+                    proficiency = st.selectbox(
+                        f"**{skill}** Proficiency",
+                        options=["None", f"Proficiency (+{proficiency_bonus})", f"Expertise (+{2 * proficiency_bonus})"],
+                        key=f"{skill}_proficiency"
                     )
                     # Calculate total proficiency
                     total_proficiency = 0
-                    if proficiency1:
+                    if proficiency == f"Proficiency (+{proficiency_bonus})":
                         total_proficiency += proficiency_bonus
-                    if proficiency2:
-                        total_proficiency += proficiency_bonus
+                    elif proficiency == f"Expertise (+{2 * proficiency_bonus})":
+                        total_proficiency += 2 * proficiency_bonus
+
                     # Final skill value
                     final_skill = modifier + total_proficiency
                     skills_final[skill] = final_skill
                     st.markdown(f"**Final {skill} Modifier:** `{final_skill:+}`")
                     st.markdown("---")  # Separator for clarity
 
-    # --------------------- Health and Armor ---------------------
+    # Health and Armor
     st.header("❤️ Health and Armor")
-    hp = st.number_input("**Hit Points (HP)**", min_value=1, value=10, step=1)
-    ac = st.number_input("**Armor Class (AC)**", min_value=1, value=10, step=1)
+    col1, col2 = st.columns(2)
+    with col1:
+        hp = st.number_input("**Hit Points (HP)**", min_value=1, value=10, step=1)
+    with col2:
+        ac = st.number_input("**Armor Class (AC)**", min_value=1, value=10, step=1)
 
-    # --------------------- Equipment ---------------------
+    # Equipment
     st.header("🎒 Equipment")
-    # Weapons
-    st.subheader("🗡️ Weapons")
-    weapons = []
-    for i in range(1, 4):
-        weapon = st.text_input(f"**Weapon {i}**", key=f"weapon_{i}")
-        weapons.append(weapon)
-    # Armor
-    st.subheader("🛡️ Armor")
-    armors = []
-    for i in range(1, 4):
-        armor = st.text_input(f"**Armor {i}**", key=f"armor_{i}")
-        armors.append(armor)
+    col1, col2 = st.columns(2)
+    with col1:
+        # Weapons
+        st.subheader("🗡️ Weapons")
+        weapons = []
+        for i in range(1, 4):
+            weapon = st.text_input(f"**Weapon {i}**", key=f"weapon_{i}", max_chars=20)
+            weapons.append(weapon)
+    with col2:
+        # Armor
+        st.subheader("🛡️ Armor")
+        armors = []
+        for i in range(1, 4):
+            armor = st.text_input(f"**Armor {i}**", key=f"armor_{i}", max_chars=20)
+            armors.append(armor)
 
-        # --------------------- Powers ---------------------
+    # Class Powers
     st.header("✨ Class Powers")
     powers = []
     for i in range(1, 7):
-        power = st.text_input(f"**Class Power {i}**", key=f"power_{i}")
+        power = st.text_input(f"**Class Power {i}**", key=f"power_{i}", max_chars=20)
         powers.append(power)
 
-    # --------------------- Spell Spaces ---------------------
+    # Spell Spaces
     st.header("✨ Spells")
     spell_levels = list(range(0, 10))
     spells = {}
@@ -200,111 +206,82 @@ def main():
             for i in range(1, 7):
                 spell = st.text_input(
                     f"**Spell {i}**",
-                    key=f"spell_{level_num}_{i}"
+                    key=f"spell_{level_num}_{i}",
+                    max_chars=20
                 )
                 spells[level_num].append(spell)
 
-    # --------------------- Display Summary ---------------------
+    # Display Summary
     if st.button("📄 Show Summary"):
         st.markdown("---")
         st.subheader("📜 **Character Summary**")
 
         # Character Information
         st.markdown("### 📝 Character Information")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write(f"**Race:** {race}")
-            st.write(f"**Class:** {lass}")
-        with col2:
-            st.write(f"**Level:** {level}")
-            st.write(f"**Proficiency Bonus:** `+{proficiency_bonus}`")
+        st.markdown(f"**Race:** {race}")
+        st.markdown(f"**Class:** {lass}")
+        st.markdown(f"**Level:** {level}")
+        st.markdown(f"**Proficiency Bonus:** +{proficiency_bonus}")
 
-        # Ability Scores and Modifiers
-        st.markdown("### 📊 Ability Scores and Modifiers")
-        ability_table = []
-        for ability in abilities:
-            ability_table.append({
-                "Ability": ability,
-                "Score": ability_scores[ability],
-                "Modifier": f"{ability_mods[ability]:+}"
-            })
-        st.table(ability_table)
+        # Ability Scores
+        st.markdown("### 📊 Ability Scores")
+        for ability, score in ability_scores.items():
+            st.markdown(f"**{ability}:** {score} (Modifier: {ability_mods[ability]})")
 
         # Skills
         st.markdown("### 🎯 Skills")
-        skills_table = []
-        for ability, skill_list in skills_dict.items():
-            for skill in skill_list:
-                skills_table.append({
-                    "Skill": skill,
-                    "Final Modifier": f"{skills_final[skill]:+}"
-                })
-        st.table(skills_table)
+        for skill, final_mod in skills_final.items():
+            st.markdown(f"**{skill}:** {final_mod:+}")
 
         # Health and Armor
         st.markdown("### ❤️ Health and Armor")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write(f"**Hit Points (HP):** {hp}")
-        with col2:
-            st.write(f"**Armor Class (AC):** {ac}")
+        st.markdown(f"**Hit Points (HP):** {hp}")
+        st.markdown(f"**Armor Class (AC):** {ac}")
 
-        # Equipment
-        st.markdown("### 🎒 Equipment")
         # Weapons
-        st.subheader("🗡️ Weapons")
+        st.markdown("### 🎒 Weapons")
         for weapon in weapons:
             if weapon:
-                st.write(f"- {weapon}")
-        # Armor
-        st.subheader("🛡️ Armor")
+                st.markdown(f"- {weapon}")
+
+        # Armors
+        st.markdown("### 🛡️ Armor")
         for armor in armors:
             if armor:
-                st.write(f"- {armor}")
+                st.markdown(f"- {armor}")
 
         # Class Powers
         st.markdown("### ✨ Class Powers")
         for power in powers:
             if power:
-                st.write(f"- {power}")
+                st.markdown(f"- {power}")
 
         # Spells
         st.markdown("### ✨ Spells")
-        for level_num in spell_levels:
-            active_spells = [spell for spell in spells[level_num] if spell]
-            if active_spells:
-                st.markdown(f"**📖 Spell Level {level_num}:**")
-                for spell in active_spells:
-                    st.write(f"- {spell}")
+        for level, spells_list in spells.items():
+            st.markdown(f"**Spell Level {level}:**")
+            for spell in spells_list:
+                if spell:
+                    st.markdown(f"- {spell}")
 
-    # --------------------- Download Character Sheet as PDF ---------------------
-    st.header("📥 Download Character Sheet as PDF")
-    if st.button("Download"):
+    # Generate PDF
+    if st.button("📥 Generate PDF"):
         character = {
-            "Race": race,
-            "Class": lass,
-            "Level": level,
-            "Proficiency Bonus": proficiency_bonus,
-            "Ability Scores": ability_scores,
-            "Skills": skills_final,
-            "HP": hp,
-            "AC": ac,
-            "Weapons": weapons,
-            "Armors": armors,
-            "Class Powers": powers,
-            "Spells": spells
+            'Race': race,
+            'Class': lass,
+            'Level': level,
+            'Proficiency Bonus': proficiency_bonus,
+            'Ability Scores': ability_scores,
+            'Skills': skills_final,
+            'HP': hp,
+            'AC': ac,
+            'Weapons': weapons,
+            'Armors': armors,
+            'Class Powers': powers,
+            'Spells': spells,
         }
-
-        # Generate PDF
         pdf_bytes = generate_pdf(character)
-
-        # Create a download button for the PDF
-        st.download_button(
-            label="📄 Download as PDF",
-            data=pdf_bytes,
-            file_name="dnd_character_sheet.pdf",
-            mime="application/pdf"
-        )
+        st.download_button("Download Character Sheet", data=pdf_bytes, file_name="character_sheet.pdf")
 
     # --------------------- Spell Search ---------------------
     st.header("🔍 Spell Search")
@@ -354,7 +331,6 @@ def main():
     ### Spells Resources:
     - [Spells Filter](https://www.aidedd.org/dnd-filters/spells-5e.php)
     """, unsafe_allow_html=True)
-
-# Run the app
+    
 if __name__ == "__main__":
     main()
